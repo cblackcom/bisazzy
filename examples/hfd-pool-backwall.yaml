@@ -1,0 +1,19 @@
+mixes:
+- name: waterline
+  fillgel: "000000"
+  components:
+    SM 15: 16
+    GL 10: 24
+    SM 62: 14
+    SM 36: 28
+    SM 77: 18
+- name: spa
+  fillgel: "000000"
+  components:
+    SM 36: 100
+direction: vertical
+mixSequence:
+- name: waterline
+  tiles: 5
+- name: spa
+  tiles: 10
