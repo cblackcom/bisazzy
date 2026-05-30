@@ -1,19 +1,74 @@
 mixes:
+- name: wall-1
+  fillgel: "000000"
+  components:
+    SM 46: 54
+    SM 29: 40
+    SM 15: 6
+- name: wall-2
+  fillgel: "000000"
+  components:
+    SM 46: 56
+    SM 29: 12
+    SM 15: 16
+    GL 10: 12
+    SM 62: 4
+- name: wall-3
+  fillgel: "000000"
+  components:
+    SM 46: 28
+    SM 29: 6
+    SM 15: 24
+    GL 10: 20
+    SM 62: 16
+    SM 36: 6
+- name: wall-4
+  fillgel: "000000"
+  components:
+    SM 46: 4
+    SM 29: 0
+    SM 15: 32
+    GL 10: 26
+    SM 62: 20
+    SM 36: 12
+    SM 77: 6 
 - name: waterline
   fillgel: "000000"
   components:
+    SM 46: 0
+    SM 29: 0
     SM 15: 16
     GL 10: 24
     SM 62: 14
     SM 36: 28
     SM 77: 18
+- name: wall-6
+  fillgel: "000000"
+  components:
+    SM 46: 0
+    SM 29: 0
+    SM 15: 0
+    GL 10: 10
+    SM 62: 10
+    SM 36: 40
+    SM 77: 40
 - name: spa
   fillgel: "000000"
   components:
+    # note: real product will actually be SM 77
     SM 36: 100
 direction: vertical
 mixSequence:
-- name: waterline
+- name: wall-1
+  tiles: 2
+- name: wall-2
   tiles: 5
-- name: spa
-  tiles: 10
+- name: wall-3
+  tiles: 5
+- name: wall-4
+  tiles: 5
+- name: waterline
+  tiles: 7
+- name: wall-6
+  tiles: 9
+widthTiles: 75

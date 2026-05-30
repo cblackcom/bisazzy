@@ -11,7 +11,7 @@ import (
 const DirectionHorizontal = "horizontal"
 const DirectionVertical = "vertical"
 
-func LoadImage(path string, cropPx int, direction string) image.Image {
+func LoadImage(path string, xCropPx int, yCropPx int) image.Image {
 	f, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -21,28 +21,26 @@ func LoadImage(path string, cropPx int, direction string) image.Image {
 	if err != nil {
 		panic(err)
 	}
-	if cropPx > 0 {
-		type subImager interface {
-			SubImage(r image.Rectangle) image.Image
-		}
-		si, ok := img.(subImager)
-		if !ok {
-			panic(fmt.Errorf("subImager not ok"))
-		}
-		b := img.Bounds()
-		switch direction {
-		case DirectionHorizontal:
-			if cropPx < img.Bounds().Dx() {
-				img = si.SubImage(image.Rect(b.Min.X, b.Min.Y, b.Max.X+cropPx, b.Min.Y))
-			}
-		case DirectionVertical:
-			if cropPx < img.Bounds().Dy() {
-				img = si.SubImage(image.Rect(b.Min.X, b.Min.Y, b.Max.X, b.Min.Y+cropPx))
-			}
-		default:
-			panic(fmt.Errorf("unknown direction %q", direction))
-		}
+	if xCropPx <= 0 && yCropPx <= 0 {
+		return img
 	}
+	type subImager interface {
+		SubImage(r image.Rectangle) image.Image
+	}
+	si, ok := img.(subImager)
+	if !ok {
+		panic(fmt.Errorf("subImager not ok"))
+	}
+	b := img.Bounds()
+	x1 := b.Max.X
+	y1 := b.Max.Y
+	if xCropPx > 0 {
+		x1 = b.Min.X + xCropPx
+	}
+	if yCropPx > 0 {
+		y1 = b.Min.Y + yCropPx
+	}
+	img = si.SubImage(image.Rect(b.Min.X, b.Min.Y, x1, y1))
 	return img
 }
 

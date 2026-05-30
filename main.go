@@ -22,6 +22,7 @@ type CompositionDef struct {
 	Direction   string            `yaml:"direction"`
 	Mixes       []Mix             `yaml:"mixes"`
 	MixSequence []MixSequenceStep `yaml:"mixSequence"`
+	WidthTiles  int               `yaml:"widthTiles"`
 }
 
 func loadCompositionDef(path string) CompositionDef {
@@ -37,7 +38,17 @@ func loadCompositionDef(path string) CompositionDef {
 }
 
 func (cd *CompositionDef) Compose(inputPath string) {
-	var imgs []image.Image
+	// default composition direction is vertical
+	var flipXy bool
+	switch cd.Direction {
+	case DirectionVertical:
+		flipXy = false
+	case DirectionHorizontal:
+		flipXy = true
+	default:
+		panic(fmt.Errorf("unknown direction %q", cd.Direction))
+	}
+	var yImgs []image.Image
 	for _, step := range cd.MixSequence {
 		var mix *Mix
 		for i := range cd.Mixes {
@@ -50,30 +61,57 @@ func (cd *CompositionDef) Compose(inputPath string) {
 			panic(fmt.Sprintf("mix %q not found", step.Name))
 		}
 		cached := mix.CachedRenders()
-		stepTilesAdded := 0
+		yRemain := step.Tiles
 		for {
-			tilesRequired := step.Tiles - stepTilesAdded
-			if tilesRequired <= 0 {
+			if yRemain <= 0 {
 				break
 			}
-			var path string
-			if len(cached) > 0 {
-				path = cached[0]
-				cached = cached[1:]
+			yCropTiles := Size20.TilesPerRender
+			var yCropPx int
+			if yRemain < Size20.TilesPerRender {
+				yCropTiles = yRemain
+				yCropPx = int(math.Ceil(Size20.PxPerTile() * float64(yRemain)))
+			}
+			var xImgs []image.Image
+			xRemain := cd.WidthTiles
+			for {
+				if xRemain <= 0 {
+					break
+				}
+				var path string
+				if len(cached) > 0 {
+					path = cached[0]
+					cached = cached[1:]
+				} else {
+					path = mix.Render()
+				}
+				log.Printf("path for %q: %s", mix.Name, path)
+				xCropTiles := Size20.TilesPerRender
+				var xCropPx int
+				if xRemain < Size20.TilesPerRender {
+					xCropTiles = xRemain
+					xCropPx = int(math.Ceil(Size20.PxPerTile() * float64(xRemain)))
+				}
+				var img image.Image
+				if flipXy {
+					img = LoadImage(path, yCropPx, xCropPx)
+				} else {
+					img = LoadImage(path, xCropPx, yCropPx)
+				}
+				xImgs = append(xImgs, img)
+				xRemain -= xCropTiles
+			}
+			var xComp *image.RGBA
+			if flipXy {
+				xComp = Stitch(xImgs, DirectionVertical)
 			} else {
-				path = mix.Render()
+				xComp = Stitch(xImgs, DirectionHorizontal)
 			}
-			log.Printf("path for %q: %s", mix.Name, path)
-			var cropPx int
-			if tilesRequired < Size20.TilesPerRender {
-				cropPx = int(math.Ceil(Size20.PxPerTile() * float64(tilesRequired)))
-			}
-			img := LoadImage(path, cropPx, cd.Direction)
-			imgs = append(imgs, img)
-			stepTilesAdded += tilesRequired
+			yImgs = append(yImgs, xComp)
+			yRemain -= yCropTiles
 		}
 	}
-	comp := Stitch(imgs, cd.Direction)
+	comp := Stitch(yImgs, cd.Direction)
 	outFilename := strings.TrimSuffix(inputPath, filepath.Ext(inputPath)) + ".jpg"
 	out, err := os.Create(outFilename)
 	if err != nil {
