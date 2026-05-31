@@ -1,0 +1,18 @@
+mixes:
+- name: waterline
+  fillgel: "000000"
+  components:
+    SM 46: 0
+    SM 29: 0
+    SM 15: 16
+    GL 10: 24
+    SM 62: 14
+    SM 36: 28
+    SM 77: 18
+direction: vertical
+# max dimension 10k px, ~2.5x downsample in sketchup,
+# workable for our purposes
+mixSequence:
+- name: waterline
+  tiles: 150
+widthTiles: 150

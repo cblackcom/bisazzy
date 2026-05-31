@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -38,6 +39,7 @@ func loadCompositionDef(path string) CompositionDef {
 }
 
 func (cd *CompositionDef) Compose(inputPath string) {
+	nextRenderAt := time.Now()
 	// default composition direction is vertical
 	var flipXy bool
 	switch cd.Direction {
@@ -83,7 +85,12 @@ func (cd *CompositionDef) Compose(inputPath string) {
 					path = cached[0]
 					cached = cached[1:]
 				} else {
+					// be nice; don't peg their API
+					if wait := time.Until(nextRenderAt); wait > 0 {
+						time.Sleep(wait)
+					}
 					path = mix.Render()
+					nextRenderAt = time.Now().Add(time.Second)
 				}
 				log.Printf("path for %q: %s", mix.Name, path)
 				xCropTiles := Size20.TilesPerRender
@@ -123,6 +130,19 @@ func (cd *CompositionDef) Compose(inputPath string) {
 		panic(err)
 	}
 	log.Printf("saved as %s", outFilename)
+	w := comp.Bounds().Dx()
+	h := comp.Bounds().Dy()
+	log.Printf(
+		"measurements: %d x %d px; %d x %d mm",
+		w,
+		h,
+		int(math.Round(float64(comp.Bounds().Dx())*Size20.MmPerPx())),
+		int(math.Round(float64(comp.Bounds().Dy())*Size20.MmPerPx())),
+	)
+	if w > 4096 || h > 4096 {
+		log.Printf("warning: dimensions > 4096px, sketchup will downsample")
+		log.Printf("(although 2-3x downsample may look sufficient depending on use case)")
+	}
 }
 
 func main() {

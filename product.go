@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type ProductLine struct {
 	Code       string
@@ -46,6 +48,10 @@ func (ps *ProductSize) PxPerMm() float64 {
 	// 15 tiles + 15 gaps (14 between the tiles, 1/2 on each side)
 	renderMm := float64(ps.TileEdgeMm*ps.TilesPerRender) + float64(ps.GapMm*ps.TilesPerRender)
 	return float64(ps.RenderEdgePx) / renderMm
+}
+
+func (ps *ProductSize) MmPerPx() float64 {
+	return 1 / ps.PxPerMm()
 }
 
 func (ps *ProductSize) PxPerTile() float64 {
